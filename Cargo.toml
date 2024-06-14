@@ -1,0 +1,27 @@
+[package]
+name = "session-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.7", features = ["derive", "env"] }
+crc = "3.2.1"
+derive_more = "0.99.17"
+dotenvy = "0.15.7"
+env_logger = "0.11.3"
+hex = "0.4.3"
+link-cplusplus = { version = "1.0.9" }
+log = "0.4.21"
+rand = "0.8.5"
+reqwest = { version = "0.12.4", features = ["json"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
+thiserror = "1.0.61"
+tokio = { version = "1.38.0", features = ["io-util", "rt-multi-thread", "signal", "macros", "net"] }
+tokio-stream = "0.1.15"
+tokio-util = "0.7.11"
+
+[build-dependencies]
+bindgen = "0.69.4"
+cmake = "0.1.50"
