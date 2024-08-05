@@ -22,13 +22,18 @@ pub struct GetMessagesSince<'a> {
     pub limit: Option<usize>,
 }
 
-fn build_get_message_path_segments(room: &str, operation: &str) -> impl Iterator<Item = Cow<str>> {
+fn build_get_message_path_segments<'a>(
+    room: &'a str,
+    operation: &'a str,
+) -> impl Iterator<Item = Cow<'a, str>> {
     return ["room", room, "messages", operation]
         .into_iter()
         .map(Cow::Borrowed);
 }
 
-fn build_limit_query(limit: Option<usize>) -> impl Iterator<Item = Cow<str>> {
+fn build_limit_query<'a>(
+    limit: Option<usize>,
+) -> impl Iterator<Item = (Cow<'a, str>, Cow<'a, str>)> {
     return limit
         .into_iter()
         .flat_map(|limit| [(Cow::Borrowed("limit"), Cow::Owned(limit.to_string()))].into_iter());
@@ -55,7 +60,7 @@ impl<'a> HttpJsonApi for GetRecentMessages<'a> {
 }
 
 impl<'a> HttpJsonApi for GetMessagesBefore<'a> {
-    type SuccessResponse = <GetRecentMessages<'_> as HttpJsonApi>::SuccessResponse;
+    type SuccessResponse = Vec<super::message::Message<'static>>;
 
     fn method(&self) -> Method {
         Method::GET
@@ -66,7 +71,7 @@ impl<'a> HttpJsonApi for GetMessagesBefore<'a> {
             .chain(std::iter::once(Cow::Borrowed(self.before_msg_id.as_str())))
     }
 
-    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)> {
+    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)> + '_ {
         build_limit_query(self.limit)
     }
 
@@ -76,7 +81,7 @@ impl<'a> HttpJsonApi for GetMessagesBefore<'a> {
 }
 
 impl<'a> HttpJsonApi for GetMessagesSince<'a> {
-    type SuccessResponse = <GetRecentMessages<'_> as HttpJsonApi>::SuccessResponse;
+    type SuccessResponse = Vec<super::message::Message<'static>>;
 
     fn method(&self) -> Method {
         Method::GET
@@ -87,7 +92,7 @@ impl<'a> HttpJsonApi for GetMessagesSince<'a> {
             .chain(std::iter::once(Cow::Borrowed(self.since_msg_id.as_str())))
     }
 
-    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)> {
+    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)> + '_ {
         build_limit_query(self.limit)
     }
 

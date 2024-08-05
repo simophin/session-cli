@@ -7,13 +7,13 @@ pub struct NonEmptyStringRef<'a>(&'a str);
 
 impl<'a> Display for NonEmptyStringRef<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+        std::fmt::Display::fmt(self.0, f)
     }
 }
 
 impl<'a> Debug for NonEmptyStringRef<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+        std::fmt::Debug::fmt(self.0, f)
     }
 }
 

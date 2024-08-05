@@ -241,13 +241,14 @@ impl Network for LegacyNetwork {
                 (data, dest_pub_key, final_pub_key, final_sec_key)
             }
             OnionRequest::Http { request, dest_key } => {
-                let payload = request.to_http_1_1();
-                let (data, final_pub_key, final_sec_key) = builder
-                    .set_server_destination(&request.uri().into(), request.method(), dest_key)
-                    .and_then(|b| b.build(&payload))
-                    .map_err(LegacyNetworkError::OnionEncryptionError)?;
-
-                (data, Cow::Borrowed(dest_key), final_pub_key, final_sec_key)
+                // let payload = request.to_http_1_1();
+                // let (data, final_pub_key, final_sec_key) = builder
+                //     .set_server_destination(&request.uri().into(), request.method(), dest_key)
+                //     .and_then(|b| b.build(&payload))
+                //     .map_err(LegacyNetworkError::OnionEncryptionError)?;
+                //
+                // (data, Cow::Borrowed(dest_key), final_pub_key, final_sec_key)
+                todo!()
             }
         };
 

@@ -13,7 +13,7 @@ pub trait HttpJsonApi {
 
     fn method(&self) -> Method;
     fn path_segments(&self) -> impl Iterator<Item = Cow<str>>;
-    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)>;
+    fn queries(&self) -> impl Iterator<Item = (Cow<str>, Cow<str>)> + '_;
 
     fn request(&self) -> Option<&impl Serialize>;
 }
