@@ -1,0 +1,33 @@
+syntax = "proto2";
+
+package SessionCliApp;
+
+message GetConversationsRequest {
+}
+
+message ProfileImagePicture {
+  required string url = 1;
+  required string key = 2;
+}
+
+message ProfilePicture {
+  optional ProfileImagePicture image = 1;
+  required string fallback_text = 2;
+}
+
+message ConversationSummaryMessage {
+  required string sender = 1;
+  required string message = 2;
+  required string time = 3;
+}
+
+message ConversationSummary {
+  required string id = 1;
+  repeated ProfilePicture profile_pictures = 2;
+  required string name = 3;
+  optional ConversationSummaryMessage last_message = 4;
+}
+
+message GetConversationsResponse {
+  repeated ConversationSummary conversations = 1;
+}

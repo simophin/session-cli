@@ -5,23 +5,61 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
+async-stream = "0.3.5"
+axum = { version = "0.7.5", features = ["ws"] }
+axum-streams = "0.18.0"
+base64 = "0.22.1"
+bytes = "1.6.0"
+c_str_macro = "1.0.3"
 clap = { version = "4.5.7", features = ["derive", "env"] }
 crc = "3.2.1"
 derive_more = "0.99.17"
+dirs = "5.0.1"
 dotenvy = "0.15.7"
 env_logger = "0.11.3"
+futures-core = "0.3.30"
+futures-util = "0.3.30"
 hex = "0.4.3"
+http = "1"
+include_dir = "0.7.4"
 link-cplusplus = { version = "1.0.9" }
 log = "0.4.21"
+num-traits = "0.2.19"
+num_enum = "0.7.2"
+paste = "1.0.15"
+pbjson = "0.7.0"
+pbjson-types = "0.7.0"
+progenitor = "0.7.0"
+prost = "0.13.1"
+# protobuf = "3.5.0"
+# protobuf-json-mapping = "3.5.0"
 rand = "0.8.5"
-reqwest = { version = "0.12.4", features = ["json"] }
+regress = "0.10.0"
+reqwest = { version = "0.12.5", features = ["json", "stream"] }
+rusqlite = { version = "0.31", features = ["modern-full", "bundled"] }
+rusqlite-from-row = "0.2.4"
+rusqlite_migration = { version = "1.2.0", features = ["from-directory"] }
+scopeguard = "1.2.0"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
+serde_rusqlite = "0.35.0"
+serde_with = "3.8.3"
 thiserror = "1.0.61"
-tokio = { version = "1.38.0", features = ["io-util", "rt-multi-thread", "signal", "macros", "net"] }
+tokio = { version = "1.38.0", features = [
+    "io-util",
+    "rt-multi-thread",
+    "signal",
+    "macros",
+    "net",
+] }
 tokio-stream = "0.1.15"
 tokio-util = "0.7.11"
+url = { version = "2.5.2", features = ["serde"] }
+uuid = { version = "1.9.1", features = ["v4"] }
 
 [build-dependencies]
 bindgen = "0.69.4"
 cmake = "0.1.50"
+pbjson-build = "0.7.0"
+prost-build = "0.13.1"
+protoc-bin-vendored = "3.0.0"

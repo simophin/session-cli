@@ -1,0 +1,21 @@
+{
+    "cmake.configureArgs": [
+        "-DSTATIC_BUNDLE=ON",
+        "-DBUILD_STATIC_DEPS=ON",
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DSTATIC_LIBSTD=ON",
+        "-DOXEN_LOGGING_FMT_HEADER_ONLY=ON",
+        "-DCMAKE_BUILD_TYPE=Debug"
+    ],
+    "cmake.buildBeforeRun": true,
+    "files.associations": {
+        "string_view": "cpp",
+        "array": "cpp",
+        "__locale": "cpp",
+        "locale": "cpp",
+        "__tree": "cpp",
+        "regex": "cpp",
+        "string": "cpp",
+        "*.inc": "cpp"
+    }
+}
