@@ -10,7 +10,7 @@ mod individuals;
 mod user_groups;
 mod user_profile;
 
-use crate::oxen_api::retrieve::Message;
+use crate::oxenss::retrieve::Message;
 pub use group_keys::*;
 pub use groups::*;
 pub use individuals::*;

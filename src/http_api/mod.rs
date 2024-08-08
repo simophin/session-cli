@@ -1,20 +1,18 @@
-use anyhow::Context;
-use bytes::BufMut;
+use bytes::Bytes;
 use http::Method;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::borrow::Cow;
-use std::io::Write;
+use url::Url;
+
+pub use call_source::*;
+pub use json::*;
+
+use crate::utils::HttpBaseUrl;
 
 mod build;
 mod call_source;
 mod json;
-mod legacy;
+mod network;
 mod reqwest_source;
-
-pub use build::*;
-pub use call_source::*;
-pub use json::*;
 
 pub trait HttpApi {
     type Response;
@@ -25,7 +23,7 @@ pub trait HttpApi {
 
     fn request_content_type(&self) -> Option<Cow<str>>;
 
-    fn write_request_body(&self, buf: impl BufMut) -> anyhow::Result<()>;
+    fn request_body(&self) -> Option<Bytes>;
 
     fn expected_response_type(&self) -> Option<Cow<str>>;
 
@@ -35,4 +33,18 @@ pub trait HttpApi {
         content_type: Option<&str>,
         buf: &[u8],
     ) -> Self::Response;
+
+    fn full_url(&self, base: &HttpBaseUrl) -> Url {
+        let builder = self
+            .path_segments()
+            .fold(base.build_upon(), |builder, segment| {
+                builder.append_path(segment.as_ref())
+            });
+
+        self.queries()
+            .fold(builder, |builder, (name, value)| {
+                builder.append_query(name.as_ref(), value.as_ref())
+            })
+            .build()
+    }
 }

@@ -1,7 +1,7 @@
 use crate::bindings;
 use crate::config::{Config, NamedConfig};
 use crate::cwrapper::{CArrayWrapper, CWrapper};
-use crate::oxen_api::retrieve::Message;
+use crate::oxenss::retrieve::Message;
 use anyhow::Context;
 use std::ffi::{c_char, CStr, CString};
 use std::ptr::null_mut;

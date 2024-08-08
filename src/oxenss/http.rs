@@ -1,7 +1,7 @@
 use http::Method;
 use url::Url;
 
-use crate::oxen_api::{Error as ApiError, JsonRpcCallSource};
+use crate::oxenss::{Error as ApiError, JsonRpcCallSource};
 
 impl JsonRpcCallSource for reqwest::Client {
     type Error = ApiError;

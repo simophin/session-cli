@@ -1,6 +1,6 @@
 use crate::clock::Timestamp;
 use crate::db::models::MessageSource;
-use crate::oxen_api::namespace::MessageNamespace;
+use crate::oxenss::namespace::MessageNamespace;
 use crate::session_id::{IndividualOrBlindedID, SessionID};
 use anyhow::Context;
 use rusqlite::{params, Connection, OptionalExtension};

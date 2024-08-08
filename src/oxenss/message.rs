@@ -1,6 +1,6 @@
 use crate::message_crypto::strip_message_padding;
 use crate::network::swarm::SwarmAuth;
-use crate::oxen_api::namespace::{DefaultNamespace, GroupNamespace};
+use crate::oxenss::namespace::{DefaultNamespace, GroupNamespace};
 use crate::protos::{Content, Envelope, WebSocketMessage, WebSocketRequestMessage};
 use crate::session_id::IndividualOrBlindedID;
 use anyhow::{bail, Context};

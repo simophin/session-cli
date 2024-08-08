@@ -10,7 +10,7 @@ use crate::config::Config;
 use crate::db::config::ConfigRepositoryExt;
 use crate::db::Repository;
 use crate::network::swarm::SwarmAuth;
-use crate::oxen_api::{namespace::MessageNamespace, JsonRpcCallSource, JsonRpcCallSourceExt};
+use crate::oxenss::{namespace::MessageNamespace, JsonRpcCallSource, JsonRpcCallSourceExt};
 
 pub async fn sync_config<NS, CS>(
     call_source: &CS,

@@ -1,11 +1,17 @@
+use crate::curve25519::Curve25519PubKey;
+use crate::oxenss::retrieve_service_node::{RetrieveServiceNode, ServiceNode};
+use crate::oxenss::{Error as ApiError, JsonRpcCallSourceExt};
+use crate::utils::NonEmpty;
 use anyhow::anyhow;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use derive_more::Display;
 use http::Method;
 use rand::prelude::SliceRandom;
+use rand::thread_rng;
 use reqwest::Client;
 use std::borrow::Cow;
+use std::net::SocketAddrV4;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -14,12 +20,10 @@ use tokio::sync::{watch, Mutex};
 use tokio::time::sleep;
 use url::Url;
 
-use crate::network::onion::decrypt_onion_response;
-use crate::oxen_api::retrieve_service_node::{RetrieveServiceNode, ServiceNode};
-use crate::oxen_api::{Error as ApiError, JsonRpcCallSourceExt};
-use crate::utils::{NonEmpty, RequestExt};
-
-use super::{onion::OnionRequestBuilder, Network, NetworkError, NetworkState, OnionRequest};
+use super::{
+    onion::{decrypt_onion_response, OnionRequestBuilder},
+    Network, NetworkError, NetworkState, NodeAddress,
+};
 
 const PATH_EXPIRATION: Duration = Duration::from_secs(3600 * 24);
 
@@ -113,6 +117,61 @@ impl LegacyNetwork {
             .send(NetworkState::Error(LegacyNetworkError::Timeout.into()));
     }
 
+    async fn perform_onion_req(
+        &self,
+        path_entry: &ServiceNode,
+        dest_pub_key: &Curve25519PubKey,
+        mut builder: OnionRequestBuilder,
+        payload: &[u8],
+    ) -> Result<Vec<u8>, <Self as Network>::Error> {
+        let do_request = async move {
+            let (payload, final_pub_key, final_sec_key) = builder
+                .build(payload.as_ref())
+                .map_err(LegacyNetworkError::OnionEncryptionError)?;
+
+            let resp = self
+                .client
+                .post(path_entry.onion_req_url())
+                .body(payload.as_ref().to_vec())
+                .send()
+                .await?;
+
+            log::info!("Received response status={}", resp.status());
+
+            let resp = resp.error_for_status()?;
+            let body = resp.text().await?;
+
+            let resp = decrypt_onion_response(
+                &BASE64_STANDARD.decode(body).map_err(|e| {
+                    ApiError::Other(anyhow!("Error decoding response as base64: {e:?}"))
+                })?,
+                dest_pub_key,
+                &final_pub_key,
+                &final_sec_key,
+            )
+            .ok_or(LegacyNetworkError::OnionEncryptionError(
+                "Unable to decrypt onion response",
+            ))?;
+
+            Ok(resp.as_ref().to_vec())
+        };
+
+        let r = tokio::time::timeout(Duration::from_secs(10), do_request)
+            .await
+            .map_err(|_| LegacyNetworkError::Timeout)
+            .and_then(|r| r);
+
+        match &r {
+            Ok(r) => log::debug!("Received {} bytes", r.len()),
+            Err(e) => {
+                log::error!("Error receiving onion http response: {e:?}");
+                self.report_network_issue(e).await;
+            }
+        };
+
+        r
+    }
+
     async fn get_available_network_state(
         &self,
     ) -> Result<impl AsRef<AvailableNetworkState>, LegacyNetworkError> {
@@ -193,112 +252,112 @@ impl LegacyNetwork {
 impl Network for LegacyNetwork {
     type Error = LegacyNetworkError;
 
-    async fn send_onion_request(&self, req: OnionRequest<'_>) -> Result<Vec<u8>, Self::Error> {
-        let avail = self.get_available_network_state().await?;
-        let AvailableNetworkState {
-            path, random_nodes, ..
-        } = avail.as_ref();
-        let mut builder: OnionRequestBuilder;
-        let path_entry = path.head();
-
-        let (payload, dest_pub_key, final_pub_key, final_sec_key) = match req {
-            OnionRequest::Node { dest, payload } => {
-                let dest = match dest {
-                    None => {
-                        let random_node = random_nodes
-                            .choose_random(&mut rand::thread_rng())
-                            .address();
-                        log::debug!(
-                            "Sending {} bytes to random node: {random_node:?}",
-                            payload.len(),
-                        );
-                        random_node
-                    }
-                    Some(v) => {
-                        log::debug!("Sending {} bytes to node: {v:?}", payload.len());
-                        v
-                    }
-                };
-
-                builder = OnionRequestBuilder::from_path(
-                    path.iter()
-                        .filter(|n| dest.addr.ip() != n.public_ip.as_ref()),
-                );
-
-                let dest_pub_key = dest
-                    .x25519_pub_key
-                    .unwrap_or_else(|| Cow::Owned(dest.pub_key.to_curve25519()));
-                let (data, final_pub_key, final_sec_key) = builder
-                    .set_snode_destination(
-                        *dest.addr.ip(),
-                        dest.addr.port(),
-                        &dest.pub_key,
-                        dest_pub_key.as_ref(),
-                    )
-                    .build(payload.as_ref())
-                    .map_err(LegacyNetworkError::OnionEncryptionError)?;
-
-                (data, dest_pub_key, final_pub_key, final_sec_key)
-            }
-            OnionRequest::Http { request, dest_key } => {
-                // let payload = request.to_http_1_1();
-                // let (data, final_pub_key, final_sec_key) = builder
-                //     .set_server_destination(&request.uri().into(), request.method(), dest_key)
-                //     .and_then(|b| b.build(&payload))
-                //     .map_err(LegacyNetworkError::OnionEncryptionError)?;
-                //
-                // (data, Cow::Borrowed(dest_key), final_pub_key, final_sec_key)
-                todo!()
-            }
-        };
-
-        let do_request = async {
-            let resp = self
-                .client
-                .post(path_entry.onion_req_url())
-                .body(payload.as_ref().to_vec())
-                .send()
-                .await?;
-
-            log::info!("Received response status={}", resp.status());
-
-            let resp = resp.error_for_status()?;
-            let body = resp.text().await?;
-
-            let resp = decrypt_onion_response(
-                &BASE64_STANDARD.decode(body).map_err(|e| {
-                    ApiError::Other(anyhow!("Error decoding response as base64: {e:?}"))
-                })?,
-                dest_pub_key.as_ref(),
-                &final_pub_key,
-                &final_sec_key,
-            )
-            .ok_or(LegacyNetworkError::OnionEncryptionError(
-                "Unable to decrypt onion response",
-            ))?;
-
-            Ok(resp.as_ref().to_vec())
-        };
-
-        let r = tokio::time::timeout(Duration::from_secs(10), do_request)
-            .await
-            .map_err(|_| LegacyNetworkError::Timeout)
-            .and_then(|r| r);
-
-        match &r {
-            Ok(r) => log::debug!("Received {} bytes", r.len()),
-            Err(e) => {
-                log::error!("Error receiving onion http response: {e:?}");
-                self.report_network_issue(e).await;
-            }
-        };
-
-        r
-    }
-
     fn watch_state(&self) -> Receiver<NetworkState> {
         self.network_state_sender.subscribe()
     }
+
+    async fn send_onion_request_to_node<'a>(
+        &self,
+        dest: NodeAddress<'a>,
+        payload: &[u8],
+    ) -> Result<Vec<u8>, Self::Error> {
+        let avail = self.get_available_network_state().await?;
+        let AvailableNetworkState { path, .. } = avail.as_ref();
+        let dest_pub_key = dest
+            .x25519_pub_key
+            .unwrap_or_else(|| Cow::Owned(dest.pub_key.to_curve25519()));
+
+        let mut builder = OnionRequestBuilder::from_path(path.iter());
+        builder.set_snode_destination(
+            *dest.addr.ip(),
+            dest.addr.port(),
+            &dest.pub_key,
+            dest_pub_key.as_ref(),
+        );
+
+        self.perform_onion_req(path.head(), dest_pub_key.as_ref(), builder, payload)
+            .await
+    }
+
+    async fn send_onion_request_to_random_node(
+        &self,
+        payload: &[u8],
+    ) -> Result<Vec<u8>, Self::Error> {
+        let avail = self.get_available_network_state().await?;
+        let AvailableNetworkState { random_nodes, .. } = avail.as_ref();
+        let node = random_nodes.choose_random(&mut thread_rng());
+
+        self.send_onion_request_to_node(
+            NodeAddress {
+                addr: SocketAddrV4::new(*node.public_ip.as_ref(), node.storage_port),
+                pub_key: Cow::Borrowed(&node.pubkey_ed25519),
+                x25519_pub_key: Some(Cow::Borrowed(&node.pubkey_x25519)),
+            },
+            payload,
+        )
+        .await
+    }
+
+    async fn send_onion_proxied_request(
+        &self,
+        url: &Url,
+        method: &Method,
+        content_type: Option<&str>,
+        body: Option<&[u8]>,
+        dest_pub_key: &Curve25519PubKey,
+    ) -> Result<Vec<u8>, Self::Error> {
+        let avail = self.get_available_network_state().await?;
+        let AvailableNetworkState { path, .. } = avail.as_ref();
+
+        let mut builder = OnionRequestBuilder::from_path(path.iter());
+        builder
+            .set_server_destination(url, method, dest_pub_key)
+            .map_err(|e| LegacyNetworkError::OnionEncryptionError(e))?;
+
+        let payload = build_http_payload(
+            url,
+            method,
+            content_type.map(Cow::Borrowed),
+            body.map(Cow::Borrowed),
+        );
+
+        self.perform_onion_req(path.head(), dest_pub_key, builder, &payload)
+            .await
+    }
+}
+
+fn build_http_payload(
+    url: &Url,
+    method: &Method,
+    content_type: Option<Cow<str>>,
+    body: Option<Cow<[u8]>>,
+) -> Vec<u8> {
+    use std::io::Write;
+
+    let mut payload = Vec::new();
+    let path = url.path();
+    if let Some(query) = url.query() {
+        let _ = write!(payload, "{method} {path}?{query} HTTP/1.1\r\n");
+    } else {
+        let _ = write!(payload, "{method} {path} HTTP/1.1\r\n");
+    }
+
+    // Host header
+    if let Some(host) = url.host_str() {
+        let _ = write!(payload, "Host: {host}\r\n");
+    }
+
+    // If we have content type and body, add them
+    if let (Some(content_type), Some(body)) = (content_type, body) {
+        let _ = write!(payload, "Content-Type: {content_type}\r\n");
+        let _ = write!(payload, "Content-Length: {}\r\n", body.len());
+        let _ = write!(payload, "\r\n");
+        payload.extend_from_slice(body.as_ref());
+    } else {
+        let _ = write!(payload, "\r\n");
+    }
+
+    payload
 }
 
 impl OnionRequestBuilder {

@@ -6,15 +6,16 @@ pub mod swarm;
 use crate::curve25519::Curve25519PubKey;
 use crate::ed25519::ED25519PubKey;
 use crate::ip::PublicIPv4;
-use crate::oxen_api::{Error as ApiError, JsonRpcCallSource};
+use crate::oxenss::{Error as ApiError, JsonRpcCallSource};
 use crate::utils::NonEmpty;
 use derive_more::Display;
-use http::Request;
+use http::Method;
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::net::SocketAddrV4;
 use thiserror::Error;
 use tokio::sync::watch;
+use url::Url;
 
 pub trait NetworkError: std::error::Error + Send + Sync + 'static {
     fn should_retry(&self) -> bool;
@@ -37,17 +38,6 @@ impl<'a> NodeAddress<'a> {
     }
 }
 
-pub enum OnionRequest<'a> {
-    Node {
-        dest: Option<NodeAddress<'a>>,
-        payload: Cow<'a, [u8]>,
-    },
-    Http {
-        request: Request<Cow<'a, [u8]>>,
-        dest_key: &'a Curve25519PubKey,
-    },
-}
-
 pub enum NetworkState {
     Idle,
     Connecting,
@@ -58,7 +48,25 @@ pub enum NetworkState {
 pub trait Network: 'static {
     type Error: NetworkError;
 
-    async fn send_onion_request(&self, req: OnionRequest<'_>) -> Result<Vec<u8>, Self::Error>;
+    async fn send_onion_request_to_node<'a>(
+        &self,
+        dest: NodeAddress<'a>,
+        payload: &[u8],
+    ) -> Result<Vec<u8>, Self::Error>;
+
+    async fn send_onion_request_to_random_node(
+        &self,
+        payload: &[u8],
+    ) -> Result<Vec<u8>, Self::Error>;
+
+    async fn send_onion_proxied_request(
+        &self,
+        url: &Url,
+        method: &Method,
+        content_type: Option<&str>,
+        body: Option<&[u8]>,
+        dest_pub_key: &Curve25519PubKey,
+    ) -> Result<Vec<u8>, Self::Error>;
 
     fn watch_state(&self) -> watch::Receiver<NetworkState>;
 }
@@ -83,20 +91,23 @@ impl<N: Network> JsonRpcCallSource for N {
             "Sending onion request to {arg:?}: {}",
             std::str::from_utf8(&payload).unwrap()
         );
-        self.send_onion_request(OnionRequest::Node {
-            dest: arg,
-            payload: Cow::Owned(payload),
-        })
-        .await
-        .map_err(JsonRpcNetworkError::NetworkError)
-        .and_then(|data| {
-            serde_json::from_slice(&data).map_err(|e| JsonRpcNetworkError::JsonRpcError(e.into()))
-        })
-        .inspect(|r| {
-            log::debug!("Received onion response: {r:#?}");
-        })
-        .inspect_err(|e| {
-            log::error!("Error sending onion request: {e:?}");
-        })
+
+        let resp = if let Some(addr) = arg {
+            self.send_onion_request_to_node(addr, &payload).await
+        } else {
+            self.send_onion_request_to_random_node(&payload).await
+        };
+
+        resp.map_err(JsonRpcNetworkError::NetworkError)
+            .and_then(|data| {
+                serde_json::from_slice(&data)
+                    .map_err(|e| JsonRpcNetworkError::JsonRpcError(e.into()))
+            })
+            .inspect(|r| {
+                log::debug!("Received onion response: {r:#?}");
+            })
+            .inspect_err(|e| {
+                log::error!("Error sending onion request: {e:?}");
+            })
     }
 }

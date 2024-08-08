@@ -10,10 +10,10 @@ use crate::db::messages::{Message as DbMessage, MessageJobState};
 use crate::db::models::MessageSource;
 use crate::db::{messages::MessageRepositoryExt, Repository};
 use crate::network::swarm::SwarmAuth;
-use crate::oxen_api::message::{RegularMessage, RegularMessageDecoder};
-use crate::oxen_api::namespace::MessageNamespace;
-use crate::oxen_api::retrieve::Message as ApiMessage;
-use crate::oxen_api::JsonRpcCallSource;
+use crate::oxenss::message::{RegularMessage, RegularMessageDecoder};
+use crate::oxenss::namespace::MessageNamespace;
+use crate::oxenss::retrieve::Message as ApiMessage;
+use crate::oxenss::JsonRpcCallSource;
 use crate::session_id::SessionID;
 
 pub async fn sync_messages<NS, CS>(

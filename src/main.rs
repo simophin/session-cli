@@ -9,7 +9,7 @@ use crate::identity::Identity;
 use crate::network::batch::BatchManager;
 use crate::network::legacy::LegacyNetwork;
 use crate::network::swarm::{SwarmAuth, SwarmManager, SwarmState};
-use crate::oxen_api::namespace::{
+use crate::oxenss::namespace::{
     ContactsNamespace, ConvoInfoVolatileConfigNamespace, DefaultNamespace,
     UserGroupsConfigNamespace, UserProfileConfigNamespace,
 };
@@ -20,7 +20,7 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 use tokio::try_join;
 
-mod oxen_api;
+mod oxenss;
 
 mod base64;
 #[allow(

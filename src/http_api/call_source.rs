@@ -1,20 +1,14 @@
-use bytes::Bytes;
-use derive_more::Display;
-use http::StatusCode;
-use thiserror::Error;
-
-#[derive(Debug, Display, Error)]
-pub enum HttpCallError {
-    #[display(fmt = "IO error: {}", _0)]
-    Io(std::io::Error),
-
-    #[display(fmt = "HTTP error: {}{:?}", _0, _1)]
-    HttpErrorCode(StatusCode, Option<String>),
-}
+use super::HttpApi;
+use crate::utils::HttpBaseUrl;
 
 pub trait HttpCallSource {
-    async fn new_call(
+    type Error: std::error::Error;
+    type Arg<'a>;
+
+    async fn invoke<Api: HttpApi>(
         &self,
-        req: http::Request<Bytes>,
-    ) -> Result<http::Response<Vec<u8>>, HttpCallError>;
+        base: &HttpBaseUrl,
+        arg: Self::Arg<'_>,
+        api: &Api,
+    ) -> Result<Api::Response, Self::Error>;
 }

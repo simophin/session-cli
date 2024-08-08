@@ -2,7 +2,7 @@ use anyhow::Context;
 use tokio::sync::watch;
 use tokio::try_join;
 
-use crate::oxen_api::namespace::{
+use crate::oxenss::namespace::{
     MessageNamespace, UserGroupsConfigNamespace, UserProfileConfigNamespace,
 };
 

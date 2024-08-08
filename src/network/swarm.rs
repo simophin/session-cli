@@ -1,7 +1,7 @@
-use super::{JsonRpcNetworkError, Network, NetworkError, NodeAddress, OnionRequest};
+use super::{JsonRpcNetworkError, Network, NetworkError, NodeAddress};
 use crate::ed25519::ED25519PubKey;
-use crate::oxen_api::retrieve_swarm_nodes::RetrieveSwarmNodes;
-use crate::oxen_api::{Error as ApiError, JsonRpcCallSource, JsonRpcCallSourceExt};
+use crate::oxenss::retrieve_swarm_nodes::RetrieveSwarmNodes;
+use crate::oxenss::{Error as ApiError, JsonRpcCallSource, JsonRpcCallSourceExt};
 use crate::session_id::{IndividualID, IndividualOrGroupID, SessionID};
 use crate::utils::NonEmpty;
 use derive_more::Display;
@@ -159,10 +159,7 @@ where
         while let Some(addr) = nodes.choose(&mut rand::thread_rng()) {
             match self
                 .network
-                .send_onion_request(OnionRequest::Node {
-                    dest: Some(addr.clone()),
-                    payload: payload.into(),
-                })
+                .send_onion_request_to_node(addr.clone(), payload)
                 .await
             {
                 Ok(resp) => return Ok(resp),

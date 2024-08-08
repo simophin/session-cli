@@ -10,10 +10,10 @@ use crate::db::Repository;
 use crate::ed25519::{ED25519PubKey, ED25519SecKey};
 use crate::identity::Identity;
 use crate::network::swarm::{SwarmAuth, SwarmState};
-use crate::oxen_api::namespace::{
+use crate::oxenss::namespace::{
     GroupInfoConfigNamespace, GroupKeysNamespace, GroupMemberConfigNamespace, GroupNamespace,
 };
-use crate::oxen_api::JsonRpcCallSource;
+use crate::oxenss::JsonRpcCallSource;
 use crate::session_id::{GroupID, IndividualID};
 use anyhow::{anyhow, Context};
 use futures_util::future::{select, select_all, Either};

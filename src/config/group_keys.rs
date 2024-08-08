@@ -4,7 +4,7 @@ use crate::bindings::seqno_t;
 use crate::config::{GroupAuthData, GroupInfoConfig, GroupMemberConfig};
 use crate::cwrapper::{CArrayWrapper, CWrapper};
 use crate::ed25519::{ED25519PubKey, ED25519SecKey};
-use crate::oxen_api::retrieve::Message;
+use crate::oxenss::retrieve::Message;
 use crate::session_id::SessionID;
 use crate::utils::{CArrayExt, StringExt};
 use anyhow::{bail, Context};

@@ -1,5 +1,5 @@
-use crate::oxen_api::batch::BatchResponse;
-use crate::oxen_api::{
+use crate::oxenss::batch::BatchResponse;
+use crate::oxenss::{
     batch::BatchRequest as ApiBatchRequest, Error as ApiError, JsonRpcCallSource,
     JsonRpcCallSourceExt,
 };

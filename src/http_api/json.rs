@@ -1,6 +1,6 @@
 use crate::http_api::HttpApi;
 use anyhow::Context;
-use bytes::BufMut;
+use bytes::{BufMut, Bytes};
 use derive_more::Display;
 use http::{Method, StatusCode};
 use serde::de::DeserializeOwned;
@@ -37,12 +37,14 @@ impl<T: HttpJsonApi> HttpApi for T {
         Some(Cow::Borrowed("application/json"))
     }
 
-    fn write_request_body(&self, buf: impl BufMut) -> anyhow::Result<()> {
-        if let Some(body) = self.request() {
-            serde_json::to_writer(buf.writer(), body).context("Serializing request to JSON")?;
-        }
-
-        Ok(())
+    fn request_body(&self) -> Option<Bytes> {
+        self.request()
+            .and_then(|s| {
+                serde_json::to_vec(s)
+                    .inspect_err(|e| log::error!("Error serializing JSON as json body: {:?}", e))
+                    .ok()
+            })
+            .map(Bytes::from)
     }
 
     fn expected_response_type(&self) -> Option<Cow<str>> {

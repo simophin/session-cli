@@ -26,17 +26,17 @@ fn build_get_message_path_segments<'a>(
     room: &'a str,
     operation: &'a str,
 ) -> impl Iterator<Item = Cow<'a, str>> {
-    return ["room", room, "messages", operation]
+    ["room", room, "messages", operation]
         .into_iter()
-        .map(Cow::Borrowed);
+        .map(Cow::Borrowed)
 }
 
 fn build_limit_query<'a>(
     limit: Option<usize>,
 ) -> impl Iterator<Item = (Cow<'a, str>, Cow<'a, str>)> {
-    return limit
+    limit
         .into_iter()
-        .flat_map(|limit| [(Cow::Borrowed("limit"), Cow::Owned(limit.to_string()))].into_iter());
+        .flat_map(|limit| [(Cow::Borrowed("limit"), Cow::Owned(limit.to_string()))].into_iter())
 }
 
 impl<'a> HttpJsonApi for GetRecentMessages<'a> {

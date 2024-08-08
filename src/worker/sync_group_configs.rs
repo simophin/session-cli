@@ -2,7 +2,7 @@ use super::sync_group::GroupConfigState;
 use crate::config::Config;
 use crate::db::config::ConfigRepositoryExt;
 use crate::db::Repository;
-use crate::oxen_api::retrieve::Message;
+use crate::oxenss::retrieve::Message;
 use tokio::select;
 use tokio::sync::{mpsc, watch};
 
