@@ -1,7 +1,6 @@
 use derive_more::Deref;
 use std::ffi::c_void;
 use std::mem::MaybeUninit;
-use std::ops::Deref;
 
 #[derive(Deref)]
 pub struct CArrayWrapper<T> {

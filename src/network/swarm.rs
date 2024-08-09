@@ -8,7 +8,6 @@ use derive_more::Display;
 use rand::prelude::SliceRandom;
 use serde::Serialize;
 use std::borrow::Cow;
-use std::fmt::Display;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -21,13 +20,13 @@ pub struct SwarmManager<'a, N> {
 
 #[derive(Error, Display, Debug, Clone)]
 pub enum SwarmRequestError {
-    #[display(fmt = "No usable nodes")]
+    #[display("No usable nodes")]
     JsonError(Arc<serde_json::Error>),
 
-    #[display(fmt = "Network error: {}", _0)]
+    #[display("Network error: {}", _0)]
     OnionNetworkError(Arc<dyn NetworkError>),
 
-    #[display(fmt = "Json RPC error: {}", _0)]
+    #[display("Json RPC error: {}", _0)]
     JsonRpcError(Arc<ApiError>),
 
     NoUsableNodes,

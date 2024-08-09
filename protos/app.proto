@@ -2,8 +2,6 @@ syntax = "proto2";
 
 package SessionCliApp;
 
-message GetConversationsRequest {
-}
 
 message ProfileImagePicture {
   required string url = 1;
@@ -28,6 +26,10 @@ message ConversationSummary {
   optional ConversationSummaryMessage last_message = 4;
 }
 
-message GetConversationsResponse {
+message ListConversationsRequest {
+  optional bool approved = 1;
+}
+
+message ListConversationsResponse {
   repeated ConversationSummary conversations = 1;
 }

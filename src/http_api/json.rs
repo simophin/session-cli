@@ -82,14 +82,14 @@ impl<T: HttpJsonApi> HttpApi for T {
 
 #[derive(Debug, Error, Display)]
 pub enum HttpJsonApiError {
-    #[display(fmt = "Error deserializing JSON: {}", _0)]
+    #[display("Error deserializing JSON: {}", _0)]
     InvalidJson(#[from] serde_json::Error),
 
-    #[display(fmt = "Expecting a application/json content type but got: {}", actual)]
+    #[display("Expecting a application/json content type but got: {}", actual)]
     InvalidContentType { actual: String },
 
     #[display(
-        fmt = "HTTP request failed with status code: {}, msg = {:?}",
+        "HTTP request failed with status code: {}, msg = {:?}",
         status_code,
         message
     )]

@@ -64,7 +64,8 @@ pub async fn save_group_configs(
 
 impl GroupConfigState {
     fn save_to_db(&mut self, repo: &Repository) -> anyhow::Result<()> {
-        let tx = repo.begin_transaction()?;
+        let conn = repo.obtain_connection()?;
+        let tx = conn.unchecked_transaction()?;
 
         let group_id = self.group_id.as_str();
         tx.save_config(&mut self.group_info, Some(group_id))?;

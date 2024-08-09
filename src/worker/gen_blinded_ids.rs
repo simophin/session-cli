@@ -16,7 +16,8 @@ pub async fn gen_blinded_ids(
     repo: &Repository,
 ) -> anyhow::Result<()> {
     loop {
-        let tx = repo.begin_transaction()?;
+        let conn = repo.obtain_connection()?;
+        let tx = conn.unchecked_transaction()?;
         tx.remove_settings_by_name(<BlindedID as AppSetting>::NAME)?;
 
         let config = config_watcher.borrow();

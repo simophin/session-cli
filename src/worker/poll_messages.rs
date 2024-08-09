@@ -48,7 +48,11 @@ where
 
     let save = async {
         while let Some(Ok(messages)) = message_rx.recv().await {
-            let tx = repo.begin_transaction().context("Starting transaction")?;
+            let conn = repo.obtain_connection()?;
+            let tx = conn
+                .unchecked_transaction()
+                .context("Starting transaction")?;
+
             tx.save_messages(messages.iter().filter_map(|msg| {
                 create_db_message::<NS>(swarm_auth, &message_source, msg)
                     .inspect_err(|e| log::error!("Failed to create db message: {e:?}"))

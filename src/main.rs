@@ -15,6 +15,7 @@ use crate::oxenss::namespace::{
 };
 use crate::worker::{sync_config, sync_groups, sync_messages};
 use clap::{Parser, Subcommand};
+use r2d2_sqlite::SqliteConnectionManager;
 use reqwest::Client;
 use std::time::Duration;
 use tokio::sync::broadcast;
@@ -55,6 +56,7 @@ mod app_setting;
 mod blinding;
 mod http_api;
 mod network;
+mod service;
 mod session_id;
 mod sogs_api;
 mod utils;
@@ -103,7 +105,7 @@ async fn main() {
     let db_file = dirs::home_dir().unwrap().join("Temp/session.sqlite3db");
     let _ = std::fs::remove_file(&db_file);
 
-    let repo = db::Repository::new(&format!("file://{}", db_file.display()))
+    let repo = db::Repository::new(SqliteConnectionManager::file(db_file))
         .expect("To create a new repository");
 
     let network = LegacyNetwork::new(
@@ -120,7 +122,9 @@ async fn main() {
     let identity = Identity::from_mnemonic(&std::env::var("MNEMONIC").expect("To have a mnemonic"))
         .expect("To create an identity");
 
-    repo.save_setting(None, &identity)
+    repo.obtain_connection()
+        .unwrap()
+        .save_setting(None, &identity)
         .expect("To save identity");
 
     let swarm_state = SwarmState::new(

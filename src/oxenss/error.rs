@@ -4,7 +4,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Display)]
 pub enum Error {
-    #[display(fmt = "HTTP request error: {} ({:?})", _0, _1)]
+    #[display("HTTP request error: {} ({:?})", _0, _1)]
     RequestError(http::StatusCode, Option<String>),
     JsonParseError(#[from] serde_json::Error),
     Other(#[from] anyhow::Error),

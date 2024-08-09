@@ -28,6 +28,7 @@ impl ConfigState {
     ) -> anyhow::Result<C> {
         let name = C::CONFIG_TYPE_NAME;
         let dump = repo
+            .obtain_connection()?
             .get_config_dump(name, None)
             .with_context(|| format!("Getting {name}'s dump from db"))?;
 

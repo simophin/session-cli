@@ -73,7 +73,10 @@ pub(super) async fn save_config_to_db<NS: MessageNamespace, C: Config>(
     loop {
         let mut err = None;
         config.send_if_modified(|config| {
-            if let Err(e) = repo.save_config(config, config_id) {
+            if let Err(e) = repo
+                .obtain_connection()
+                .and_then(move |c| c.save_config(config, config_id))
+            {
                 err.replace(e);
             }
 

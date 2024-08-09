@@ -34,6 +34,7 @@ where
 
     loop {
         let last_hash = repo
+            .obtain_connection()?
             .get_last_message_hash::<NS>(&message_source)
             .context("Retrieving latest hash")?;
         let resp = call_source
@@ -51,7 +52,8 @@ where
         match resp {
             Ok(mut resp) => {
                 if let Some(last_hash) = resp.latest_hash() {
-                    repo.save_last_message_hash::<NS>(&message_source, last_hash)
+                    repo.obtain_connection()?
+                        .save_last_message_hash::<NS>(&message_source, last_hash)
                         .context("Saving latest message hash")?;
                 }
 

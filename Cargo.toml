@@ -13,7 +13,7 @@ bytes = "1.6.0"
 c_str_macro = "1.0.3"
 clap = { version = "4.5.7", features = ["derive", "env"] }
 crc = "3.2.1"
-derive_more = "0.99.17"
+derive_more = { version = "1.0.0", features = ["full"] }
 dirs = "5.0.1"
 dotenvy = "0.15.7"
 env_logger = "0.11.3"
@@ -31,12 +31,14 @@ pbjson = "0.7.0"
 pbjson-types = "0.7.0"
 progenitor = "0.7.0"
 prost = "0.13.1"
+r2d2 = "0.8.10"
+r2d2_sqlite = "0.24.0"
 # protobuf = "3.5.0"
 # protobuf-json-mapping = "3.5.0"
 rand = "0.8.5"
 regress = "0.10.0"
 reqwest = { version = "0.12.5", features = ["json", "stream"] }
-rusqlite = { version = "0.31", features = ["modern-full", "bundled"] }
+rusqlite = { version = "0.31.0", features = ["modern-full", "bundled"] }
 rusqlite-from-row = "0.2.4"
 rusqlite_migration = { version = "1.2.0", features = ["from-directory"] }
 scopeguard = "1.2.0"
@@ -44,6 +46,7 @@ serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 serde_rusqlite = "0.35.0"
 serde_with = "3.8.3"
+strum = { version = "0.26.3", features = ["derive"] }
 thiserror = "1.0.61"
 tokio = { version = "1.38.0", features = [
     "io-util",
@@ -52,7 +55,7 @@ tokio = { version = "1.38.0", features = [
     "macros",
     "net",
 ] }
-tokio-stream = "0.1.15"
+tokio-stream = { version = "0.1.15", features = ["sync"] }
 tokio-util = "0.7.11"
 url = { version = "2.5.2", features = ["serde"] }
 uuid = { version = "1.9.1", features = ["v4"] }

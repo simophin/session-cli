@@ -49,7 +49,8 @@ impl GroupConfigState {
             &group_id,
             group_admin_key,
             Some(
-                repo.get_config_dump(GroupInfoConfig::CONFIG_TYPE_NAME, Some(group_id.as_str()))
+                repo.obtain_connection()?
+                    .get_config_dump(GroupInfoConfig::CONFIG_TYPE_NAME, Some(group_id.as_str()))
                     .context("Failed to get group info dump")?
                     .as_ref(),
             ),
@@ -60,7 +61,8 @@ impl GroupConfigState {
             &group_id,
             group_admin_key,
             Some(
-                repo.get_config_dump(GroupMemberConfig::CONFIG_TYPE_NAME, Some(group_id.as_str()))
+                repo.obtain_connection()?
+                    .get_config_dump(GroupMemberConfig::CONFIG_TYPE_NAME, Some(group_id.as_str()))
                     .context("Failed to get group members dump")?
                     .as_ref(),
             ),
@@ -73,7 +75,8 @@ impl GroupConfigState {
             group_admin_key,
             &mut group_info,
             &mut group_members,
-            repo.get_config_dump(GroupKeys::CONFIG_TYPE_NAME, Some(group_id.as_str()))
+            repo.obtain_connection()?
+                .get_config_dump(GroupKeys::CONFIG_TYPE_NAME, Some(group_id.as_str()))
                 .context("Failed to get group members dump")?
                 .as_ref(),
         )

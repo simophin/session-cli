@@ -9,7 +9,6 @@ use anyhow::bail;
 use derive_more::{Deref, DerefMut};
 use std::ffi::{c_char, CStr};
 use std::mem::MaybeUninit;
-use std::ops::Deref;
 
 struct GroupIter(CWrapper<bindings::user_groups_iterator>);
 

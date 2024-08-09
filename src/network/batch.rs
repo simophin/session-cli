@@ -155,10 +155,10 @@ where
 
 #[derive(Error, Debug, Display)]
 pub enum BatchError<E> {
-    #[display(fmt = "Source error: {}", _0)]
+    #[display("Source error: {}", _0)]
     SourceError(Arc<E>),
 
-    #[display(fmt = "Batch error: {}", _0)]
+    #[display("Batch error: {}", _0)]
     BatchError(anyhow::Error),
 
     Cancelled,
